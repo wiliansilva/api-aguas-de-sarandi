@@ -14,8 +14,7 @@ class ClienteRepository
      */
     public function findByDocumento(string $documento): array
     {
-        return DB::connection('mysql')
-            ->select(
+        return DB::select(
                 "SELECT
                     C.C01LIG  AS Ligacao,
                     C.C01DV   AS DV,
