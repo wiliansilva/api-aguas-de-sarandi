@@ -25,7 +25,7 @@ class DocumentoService
             return [
                 'referencia' => $r['referencia'] ?? null,
                 'vencimento' => $r['vencimento'] ?? null,
-                'valor'      => $r['valor'] !== null ? (float) $r['valor'] : null,
+                'valor'      => isset($r['valor']) && $r['valor'] !== null ? (float) $r['valor'] : null,
                 'qrCode'     => $r['qrCode']     ?? null,
             ];
         }, $rows);
