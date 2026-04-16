@@ -21,7 +21,7 @@ class BasicAuthMiddleware
             return $this->unauthorized('Header Authorization ausente ou inválido.');
         }
 
-        $base64Credentials = substr($authHeader, 6); // Remove "Basic "
+        $base64Credentials = substr($authHeader, 6);
         $decoded = base64_decode($base64Credentials, strict: true);
 
         if ($decoded === false || !str_contains($decoded, ':')) {
@@ -33,7 +33,13 @@ class BasicAuthMiddleware
         $validUser     = config('auth.api_basic.username');
         $validPassword = config('auth.api_basic.password');
 
-        if ($username !== $validUser || $password !== $validPassword) {
+        // hash_equals previne timing attacks:
+        // compara as strings em tempo constante, impedindo que um atacante
+        // descubra a senha medindo o tempo de resposta caractere por caractere.
+        $userMatch     = hash_equals($validUser, $username);
+        $passwordMatch = hash_equals($validPassword, $password);
+
+        if (!$userMatch || !$passwordMatch) {
             return $this->unauthorized('Usuário ou senha incorretos.');
         }
 
@@ -43,6 +49,7 @@ class BasicAuthMiddleware
     private function unauthorized(string $message): Response
     {
         return response()->json([
+            'success' => false,
             'error'   => 'Não autorizado.',
             'message' => $message,
         ], 401)->withHeaders([
