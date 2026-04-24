@@ -1,7 +1,0 @@
-{
-  "permissions": {
-    "allow": [
-      "Bash(chmod +x /Users/wilianalves/Documents/Dev/personal/api-aguas-de-sarandi/deploy.sh)"
-    ]
-  }
-}

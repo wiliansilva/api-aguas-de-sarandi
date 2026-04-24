@@ -22,7 +22,7 @@ class LinhaDigitavelService
      *     Pos  5-15: Valor (11 dígitos, 9 inteiros + 2 decimais)
      *     Pos 16-44: Campo livre (29 dígitos, definido pela empresa)
      *
-     *   Linha digitável: blocos [10, 11, 11, 11] extraídos da sequência sem DV,
+     *   Linha digitável: 4 blocos de 11 dígitos extraídos do barcode de 44 dígitos,
      *   cada bloco seguido de seu próprio DV Módulo 10.
      *
      * @param  int     $ligacao
@@ -64,8 +64,10 @@ class LinhaDigitavelService
 
          $dv = Modulo10::calcular($sequenciaSemDv);
 
-        // FEBRABAN Produto 8: linha digitável usa blocos [10, 11, 11, 11] da sequência SEM DV
-        $campo1 = substr($sequenciaSemDv, 0, 10).$dv; // Inclui o DV geral no primeiro campo
+        // FEBRABAN Produto 8: barcode de 44 dígitos dividido em 4 blocos de 11.
+        // O DV geral ocupa a posição 4 do barcode (entre "826" e o valor),
+        // por isso é inserido no campo1 após os 3 primeiros dígitos.
+        $campo1 = substr($sequenciaSemDv, 0, 3) . $dv . substr($sequenciaSemDv, 3, 7);
         $campo2 = substr($sequenciaSemDv, 10, 11);
         $campo3 = substr($sequenciaSemDv, 21, 11);
         $campo4 = substr($sequenciaSemDv, 32, 11);
