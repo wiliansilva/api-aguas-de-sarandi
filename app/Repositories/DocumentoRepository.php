@@ -9,10 +9,10 @@ class DocumentoRepository
     /**
      * Busca documentos em aberto (não pagos) de uma ligação.
      *
-     * @param  int  $ligacao  Número da ligação (CADUSU.C01LIG).
+     * @param  string  $ligacao  Número da ligação (CADUSU.C01LIG).
      * @return array
      */
-    public function findDocumentosEmAberto(int $ligacao): array
+    public function findDocumentosEmAberto(string $ligacao): array
     {
         return DB::select(
                 "SELECT

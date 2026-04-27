@@ -16,7 +16,7 @@ class ClienteResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
-            'ligacao'          => $this->resource['Ligacao']         ?? null,
+            'ligacao'          => isset($this->resource['Ligacao']) ? (string) $this->resource['Ligacao'] : null,
             'dv'               => $this->resource['DV']              ?? null,
             'nome'             => $this->resource['Nome']            ?? null,
             'cpf_cnpj'         => $this->resource['CPF_CNPJ']        ?? null,

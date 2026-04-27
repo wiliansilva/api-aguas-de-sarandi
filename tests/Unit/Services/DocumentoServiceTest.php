@@ -23,7 +23,7 @@ class DocumentoServiceTest extends TestCase
     {
         $this->repository->method('findDocumentosEmAberto')->willReturn([]);
 
-        $resultado = $this->service->consultarDocumentosEmAberto(1001);
+        $resultado = $this->service->consultarDocumentosEmAberto('1001');
 
         $this->assertArrayHasKey('ligacao', $resultado);
         $this->assertArrayHasKey('documentos', $resultado);
@@ -34,9 +34,9 @@ class DocumentoServiceTest extends TestCase
     {
         $this->repository->method('findDocumentosEmAberto')->willReturn([]);
 
-        $resultado = $this->service->consultarDocumentosEmAberto(9999);
+        $resultado = $this->service->consultarDocumentosEmAberto('9999');
 
-        $this->assertSame(9999, $resultado['ligacao']);
+        $this->assertSame('9999', $resultado['ligacao']);
     }
 
     public function test_total_reflete_quantidade_de_documentos(): void
@@ -48,10 +48,45 @@ class DocumentoServiceTest extends TestCase
 
         $this->repository->method('findDocumentosEmAberto')->willReturn($rows);
 
-        $resultado = $this->service->consultarDocumentosEmAberto(1001);
+        $resultado = $this->service->consultarDocumentosEmAberto('1001');
 
         $this->assertSame(2, $resultado['total']);
         $this->assertCount(2, $resultado['documentos']);
+    }
+
+    public function test_qr_code_imagem_e_gerada_quando_qrcode_preenchido(): void
+    {
+        $row = (object) [
+            'referencia' => '2024-01',
+            'vencimento' => '2024-01-10',
+            'valor'      => '150.50',
+            'qrCode'     => '00020126580014br.gov.bcb.pix0136123e4567-e89b-12d3-a456-426614174000',
+        ];
+
+        $this->repository->method('findDocumentosEmAberto')->willReturn([$row]);
+
+        $resultado = $this->service->consultarDocumentosEmAberto('1001');
+        $doc       = $resultado['documentos'][0];
+
+        $this->assertArrayHasKey('qrCodeImagem', $doc);
+        $this->assertNotNull($doc['qrCodeImagem']);
+        $this->assertStringStartsWith('data:image/png;base64,', $doc['qrCodeImagem']);
+    }
+
+    public function test_qr_code_imagem_e_null_quando_qrcode_vazio(): void
+    {
+        $row = (object) [
+            'referencia' => '2024-01',
+            'vencimento' => '2024-01-10',
+            'valor'      => '150.50',
+            'qrCode'     => null,
+        ];
+
+        $this->repository->method('findDocumentosEmAberto')->willReturn([$row]);
+
+        $resultado = $this->service->consultarDocumentosEmAberto('1001');
+
+        $this->assertNull($resultado['documentos'][0]['qrCodeImagem']);
     }
 
     public function test_valor_e_convertido_para_float(): void
@@ -65,7 +100,7 @@ class DocumentoServiceTest extends TestCase
 
         $this->repository->method('findDocumentosEmAberto')->willReturn([$row]);
 
-        $resultado = $this->service->consultarDocumentosEmAberto(1001);
+        $resultado = $this->service->consultarDocumentosEmAberto('1001');
 
         $this->assertIsFloat($resultado['documentos'][0]['valor']);
         $this->assertSame(150.50, $resultado['documentos'][0]['valor']);
@@ -82,7 +117,7 @@ class DocumentoServiceTest extends TestCase
 
         $this->repository->method('findDocumentosEmAberto')->willReturn([$row]);
 
-        $resultado = $this->service->consultarDocumentosEmAberto(1001);
+        $resultado = $this->service->consultarDocumentosEmAberto('1001');
 
         $this->assertNull($resultado['documentos'][0]['valor']);
     }
@@ -91,7 +126,7 @@ class DocumentoServiceTest extends TestCase
     {
         $this->repository->method('findDocumentosEmAberto')->willReturn([]);
 
-        $resultado = $this->service->consultarDocumentosEmAberto(1001);
+        $resultado = $this->service->consultarDocumentosEmAberto('1001');
 
         $this->assertSame(0, $resultado['total']);
         $this->assertSame([], $resultado['documentos']);
@@ -108,13 +143,14 @@ class DocumentoServiceTest extends TestCase
 
         $this->repository->method('findDocumentosEmAberto')->willReturn([$row]);
 
-        $resultado = $this->service->consultarDocumentosEmAberto(1001);
+        $resultado = $this->service->consultarDocumentosEmAberto('1001');
         $doc       = $resultado['documentos'][0];
 
         $this->assertSame('2024-03', $doc['referencia']);
         $this->assertSame('2024-03-15', $doc['vencimento']);
         $this->assertSame(99.99, $doc['valor']);
         $this->assertSame('QR_CODE_DATA', $doc['qrCode']);
+        $this->assertStringStartsWith('data:image/png;base64,', $doc['qrCodeImagem']);
     }
 
     public function test_campos_ausentes_retornam_null(): void
@@ -122,13 +158,14 @@ class DocumentoServiceTest extends TestCase
         $this->repository->method('findDocumentosEmAberto')
             ->willReturn([(object) []]);
 
-        $resultado = $this->service->consultarDocumentosEmAberto(1001);
+        $resultado = $this->service->consultarDocumentosEmAberto('1001');
         $doc       = $resultado['documentos'][0];
 
         $this->assertNull($doc['referencia']);
         $this->assertNull($doc['vencimento']);
         $this->assertNull($doc['valor']);
         $this->assertNull($doc['qrCode']);
+        $this->assertNull($doc['qrCodeImagem']);
     }
 
     public function test_passa_ligacao_correta_ao_repositorio(): void
@@ -136,10 +173,10 @@ class DocumentoServiceTest extends TestCase
         $this->repository
             ->expects($this->once())
             ->method('findDocumentosEmAberto')
-            ->with(5678)
+            ->with('5678')
             ->willReturn([]);
 
-        $this->service->consultarDocumentosEmAberto(5678);
+        $this->service->consultarDocumentosEmAberto('5678');
     }
 
     public function test_valor_inteiro_convertido_para_float(): void
@@ -148,7 +185,7 @@ class DocumentoServiceTest extends TestCase
 
         $this->repository->method('findDocumentosEmAberto')->willReturn([$row]);
 
-        $resultado = $this->service->consultarDocumentosEmAberto(1001);
+        $resultado = $this->service->consultarDocumentosEmAberto('1001');
 
         $this->assertIsFloat($resultado['documentos'][0]['valor']);
         $this->assertSame(300.0, $resultado['documentos'][0]['valor']);
@@ -164,7 +201,7 @@ class DocumentoServiceTest extends TestCase
 
         $this->repository->method('findDocumentosEmAberto')->willReturn($rows);
 
-        $resultado = $this->service->consultarDocumentosEmAberto(1001);
+        $resultado = $this->service->consultarDocumentosEmAberto('1001');
 
         $this->assertSame('2024-01', $resultado['documentos'][0]['referencia']);
         $this->assertSame('2024-02', $resultado['documentos'][1]['referencia']);

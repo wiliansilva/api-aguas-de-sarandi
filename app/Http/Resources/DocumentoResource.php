@@ -18,6 +18,7 @@ class DocumentoResource extends JsonResource
             'vencimento' => $r['vencimento'] ?? null,
             'valor'      => $r['valor'] !== null ? (float) $r['valor'] : null,
             'qrCode'     => $r['qrCode']     ?? null,
+            'qrCodeImagem' => $r['qrCodeImagem'] ?? null,
         ];
     }
 }

@@ -25,13 +25,13 @@ class LinhaDigitavelService
      *   Linha digitável: 4 blocos de 11 dígitos extraídos do barcode de 44 dígitos,
      *   cada bloco seguido de seu próprio DV Módulo 10.
      *
-     * @param  int     $ligacao
+     * @param  string  $ligacao
      * @param  string  $referencia  Formato: MMAA (ex: 0326)
      * @param  string  $vencimento  Formato: YYYY-MM-DD
      * @param  float   $valor
      * @return string  Linha digitável formatada (ex: 8260000000-5 27063500001-3 ...)
      */
-    public function gerar(int $ligacao, string $referencia, string $vencimento, float $valor): string
+    public function gerar(string $ligacao, string $referencia, string $vencimento, float $valor): string
     {
         $documento = $this->repository->findDocumento($ligacao, $referencia, $vencimento, $valor);
 
@@ -48,7 +48,7 @@ class LinhaDigitavelService
         $valorFormatado      = $this->formatarValor($valor);                              // 11 dígitos
         $referenciaFormatada = $this->formatarReferencia($referencia);                    //  4 dígitos
         $vencimentoFormatado = $this->formatarVencimento($vencimento);                    //  8 dígitos
-        $ligacaoFormatada    = str_pad((string) $ligacao, 6, '0', STR_PAD_LEFT);         //  6 dígitos
+        $ligacaoFormatada    = str_pad($ligacao, 6, '0', STR_PAD_LEFT);                  //  6 dígitos
 
         // Sequência sem DV – 43 dígitos:
         // 826(3) + Valor(11) + Empresa(8) + Ligacao(6) + Seq(2) + Referencia(4) + Vencimento(8) + Flag(1)
@@ -83,7 +83,7 @@ class LinhaDigitavelService
     /**
      * Retorna a linha digitável sem formatação (apenas dígitos e DVs).
      */
-    public function gerarSemFormatacao(int $ligacao, string $referencia, string $vencimento, float $valor): string
+    public function gerarSemFormatacao(string $ligacao, string $referencia, string $vencimento, float $valor): string
     {
         $linhaFormatada = $this->gerar($ligacao, $referencia, $vencimento, $valor);
 

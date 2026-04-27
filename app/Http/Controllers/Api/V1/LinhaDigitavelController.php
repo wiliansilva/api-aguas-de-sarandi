@@ -20,7 +20,7 @@ class LinhaDigitavelController
         $dados = $request->validated();
 
         $linhaDigitavel = $this->linhaDigitavelService->gerar(
-            ligacao:    (int)   $dados['ligacao'],
+            ligacao:    $dados['ligacao'],
             referencia: (string) $dados['referencia'],
             vencimento: (string) $dados['vencimento'],
             valor:      (float)  $dados['valor'],

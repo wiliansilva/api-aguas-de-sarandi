@@ -29,8 +29,8 @@ class ConsultaDocumentosRequest extends FormRequest
         return [
             'ligacao' => [
                 'required',
-                'integer',
-                'min:1',
+                'string',
+                'regex:/^0*[1-9]\d*$/',
             ],
         ];
     }
@@ -39,8 +39,7 @@ class ConsultaDocumentosRequest extends FormRequest
     {
         return [
             'ligacao.required' => 'O parâmetro "ligacao" é obrigatório.',
-            'ligacao.integer'  => 'O parâmetro "ligacao" deve ser um número inteiro.',
-            'ligacao.min'      => 'O parâmetro "ligacao" deve ser maior que zero.',
+            'ligacao.regex'    => 'O parâmetro "ligacao" deve ser um número inteiro positivo.',
         ];
     }
 

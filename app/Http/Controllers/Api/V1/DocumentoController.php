@@ -18,7 +18,7 @@ class DocumentoController
 
     public function index(ConsultaDocumentosRequest $request): JsonResponse
     {
-        $ligacao   = (int) $request->validated('ligacao');
+        $ligacao   = (string) $request->validated('ligacao');
         $resultado = $this->documentoService->consultarDocumentosEmAberto($ligacao);
 
         $documentos = array_map(

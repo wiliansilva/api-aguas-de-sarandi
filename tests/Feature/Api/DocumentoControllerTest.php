@@ -27,15 +27,16 @@ class DocumentoControllerTest extends TestCase
         $this->mock(DocumentoService::class, function ($mock) {
             $mock->shouldReceive('consultarDocumentosEmAberto')
                 ->once()
-                ->with(1001)
+                ->with('1001')
                 ->andReturn([
-                    'ligacao'    => 1001,
+                    'ligacao'    => '1001',
                     'documentos' => [
                         [
-                            'referencia' => '2024-01',
-                            'vencimento' => '2024-01-10',
-                            'valor'      => 150.50,
-                            'qrCode'     => null,
+                            'referencia'   => '2024-01',
+                            'vencimento'   => '2024-01-10',
+                            'valor'        => 150.50,
+                            'qrCode'       => null,
+                            'qrCodeImagem' => null,
                         ],
                     ],
                     'total' => 1,
@@ -48,11 +49,11 @@ class DocumentoControllerTest extends TestCase
         );
 
         $response->assertStatus(200)
-            ->assertJson(['success' => true, 'ligacao' => 1001, 'total' => 1])
+            ->assertJson(['success' => true, 'ligacao' => '1001', 'total' => 1])
             ->assertJsonStructure([
                 'success',
                 'ligacao',
-                'documentos' => [['referencia', 'vencimento', 'valor', 'qrCode']],
+                'documentos' => [['referencia', 'vencimento', 'valor', 'qrCode', 'qrCodeImagem']],
                 'total',
             ]);
     }
@@ -62,9 +63,9 @@ class DocumentoControllerTest extends TestCase
         $this->mock(DocumentoService::class, function ($mock) {
             $mock->shouldReceive('consultarDocumentosEmAberto')
                 ->once()
-                ->with(5000)
+                ->with('5000')
                 ->andReturn([
-                    'ligacao'    => 5000,
+                    'ligacao'    => '5000',
                     'documentos' => [],
                     'total'      => 0,
                 ]);
@@ -78,7 +79,7 @@ class DocumentoControllerTest extends TestCase
         $response->assertStatus(200)
             ->assertJson([
                 'success'    => true,
-                'ligacao'    => 5000,
+                'ligacao'    => '5000',
                 'documentos' => [],
                 'total'      => 0,
             ]);
@@ -89,11 +90,11 @@ class DocumentoControllerTest extends TestCase
         $this->mock(DocumentoService::class, function ($mock) {
             $mock->shouldReceive('consultarDocumentosEmAberto')
                 ->andReturn([
-                    'ligacao'    => 1001,
+                    'ligacao'    => '1001',
                     'documentos' => [
-                        ['referencia' => '2024-01', 'vencimento' => '2024-01-10', 'valor' => 100.0, 'qrCode' => null],
-                        ['referencia' => '2024-02', 'vencimento' => '2024-02-10', 'valor' => 200.0, 'qrCode' => null],
-                        ['referencia' => '2024-03', 'vencimento' => '2024-03-10', 'valor' => 300.0, 'qrCode' => null],
+                        ['referencia' => '2024-01', 'vencimento' => '2024-01-10', 'valor' => 100.0, 'qrCode' => null, 'qrCodeImagem' => null],
+                        ['referencia' => '2024-02', 'vencimento' => '2024-02-10', 'valor' => 200.0, 'qrCode' => null, 'qrCodeImagem' => null],
+                        ['referencia' => '2024-03', 'vencimento' => '2024-03-10', 'valor' => 300.0, 'qrCode' => null, 'qrCodeImagem' => null],
                     ],
                     'total' => 3,
                 ]);
@@ -114,7 +115,7 @@ class DocumentoControllerTest extends TestCase
         $this->mock(DocumentoService::class, function ($mock) {
             $mock->shouldReceive('consultarDocumentosEmAberto')
                 ->andReturn([
-                    'ligacao'    => 1001,
+                    'ligacao'    => '1001',
                     'documentos' => [],
                     'total'      => 0,
                 ]);
@@ -126,6 +127,69 @@ class DocumentoControllerTest extends TestCase
         );
 
         $response->assertJsonStructure(['success', 'ligacao', 'documentos', 'total']);
+    }
+
+    public function test_qr_code_imagem_presente_na_resposta_quando_qrcode_preenchido(): void
+    {
+        $base64 = 'data:image/png;base64,' . base64_encode('fake-png-content');
+
+        $this->mock(DocumentoService::class, function ($mock) use ($base64) {
+            $mock->shouldReceive('consultarDocumentosEmAberto')
+                ->andReturn([
+                    'ligacao'    => '1001',
+                    'documentos' => [
+                        [
+                            'referencia'   => '2024-01',
+                            'vencimento'   => '2024-01-10',
+                            'valor'        => 150.50,
+                            'qrCode'       => '00020126580014br.gov.bcb.pix',
+                            'qrCodeImagem' => $base64,
+                        ],
+                    ],
+                    'total' => 1,
+                ]);
+        });
+
+        $response = $this->getJson(
+            '/api/v1/documentos/1001',
+            ['Authorization' => $this->validAuth]
+        );
+
+        $response->assertStatus(200)
+            ->assertJsonStructure([
+                'documentos' => [['referencia', 'vencimento', 'valor', 'qrCode', 'qrCodeImagem']],
+            ]);
+
+        $imagem = $response->json('documentos.0.qrCodeImagem');
+        $this->assertStringStartsWith('data:image/png;base64,', $imagem);
+    }
+
+    public function test_qr_code_imagem_null_quando_qrcode_ausente(): void
+    {
+        $this->mock(DocumentoService::class, function ($mock) {
+            $mock->shouldReceive('consultarDocumentosEmAberto')
+                ->andReturn([
+                    'ligacao'    => '1001',
+                    'documentos' => [
+                        [
+                            'referencia'   => '2024-01',
+                            'vencimento'   => '2024-01-10',
+                            'valor'        => 150.50,
+                            'qrCode'       => null,
+                            'qrCodeImagem' => null,
+                        ],
+                    ],
+                    'total' => 1,
+                ]);
+        });
+
+        $response = $this->getJson(
+            '/api/v1/documentos/1001',
+            ['Authorization' => $this->validAuth]
+        );
+
+        $response->assertStatus(200)
+            ->assertJsonPath('documentos.0.qrCodeImagem', null);
     }
 
     // -------------------------------------------------------------------------
@@ -144,6 +208,17 @@ class DocumentoControllerTest extends TestCase
             ->assertJsonStructure(['success', 'error', 'detail']);
     }
 
+    public function test_retorna_422_com_ligacao_apenas_zeros(): void
+    {
+        $response = $this->getJson(
+            '/api/v1/documentos/0000',
+            ['Authorization' => $this->validAuth]
+        );
+
+        $response->assertStatus(422)
+            ->assertJson(['success' => false]);
+    }
+
     public function test_retorna_422_com_ligacao_negativa(): void
     {
         $response = $this->getJson(
@@ -157,7 +232,6 @@ class DocumentoControllerTest extends TestCase
 
     public function test_retorna_422_com_ligacao_textual(): void
     {
-        // A rota casa com qualquer segmento, mas a validação rejeita strings
         $response = $this->getJson(
             '/api/v1/documentos/abc',
             ['Authorization' => $this->validAuth]
@@ -165,6 +239,28 @@ class DocumentoControllerTest extends TestCase
 
         $response->assertStatus(422)
             ->assertJson(['success' => false]);
+    }
+
+    public function test_aceita_ligacao_com_zeros_a_esquerda(): void
+    {
+        $this->mock(DocumentoService::class, function ($mock) {
+            $mock->shouldReceive('consultarDocumentosEmAberto')
+                ->once()
+                ->with('0001')
+                ->andReturn([
+                    'ligacao'    => '0001',
+                    'documentos' => [],
+                    'total'      => 0,
+                ]);
+        });
+
+        $response = $this->getJson(
+            '/api/v1/documentos/0001',
+            ['Authorization' => $this->validAuth]
+        );
+
+        $response->assertStatus(200)
+            ->assertJson(['success' => true, 'ligacao' => '0001']);
     }
 
     // -------------------------------------------------------------------------

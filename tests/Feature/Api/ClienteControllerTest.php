@@ -31,7 +31,7 @@ class ClienteControllerTest extends TestCase
                 ->with('12345678901')
                 ->andReturn([
                     [
-                        'Ligacao'         => 1001,
+                        'Ligacao'         => '1001',
                         'DV'              => '2',
                         'Nome'            => 'João da Silva',
                         'CPF_CNPJ'        => '12345678901',
@@ -134,8 +134,8 @@ class ClienteControllerTest extends TestCase
     public function test_total_reflete_quantidade_de_clientes_retornados(): void
     {
         $clientes = [
-            ['Ligacao' => 1001, 'DV' => '1', 'Nome' => 'João', 'CPF_CNPJ' => '12345678901', 'CPF_CNPJ_2' => null, 'Rua' => null, 'Bairro' => null, 'Numero' => null, 'Complemento' => null, 'nomeDoMunicipio' => null],
-            ['Ligacao' => 1002, 'DV' => '2', 'Nome' => 'Maria', 'CPF_CNPJ' => '12345678901', 'CPF_CNPJ_2' => null, 'Rua' => null, 'Bairro' => null, 'Numero' => null, 'Complemento' => null, 'nomeDoMunicipio' => null],
+            ['Ligacao' => '1001', 'DV' => '1', 'Nome' => 'João', 'CPF_CNPJ' => '12345678901', 'CPF_CNPJ_2' => null, 'Rua' => null, 'Bairro' => null, 'Numero' => null, 'Complemento' => null, 'nomeDoMunicipio' => null],
+            ['Ligacao' => '1002', 'DV' => '2', 'Nome' => 'Maria', 'CPF_CNPJ' => '12345678901', 'CPF_CNPJ_2' => null, 'Rua' => null, 'Bairro' => null, 'Numero' => null, 'Complemento' => null, 'nomeDoMunicipio' => null],
         ];
 
         $this->mock(ClienteService::class, function ($mock) use ($clientes) {

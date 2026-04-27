@@ -16,7 +16,7 @@ class LinhaDigitavelRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'ligacao'    => ['required', 'integer', 'min:1'],
+            'ligacao'    => ['required', 'string', 'regex:/^0*[1-9]\d*$/'],
             'referencia' => ['required', 'string',  'regex:/^\d{4}$/'],
             'vencimento' => ['required', 'date_format:Y-m-d'],
             'valor'      => ['required', 'numeric',  'min:0.01'],
@@ -27,8 +27,7 @@ class LinhaDigitavelRequest extends FormRequest
     {
         return [
             'ligacao.required'    => 'O campo "ligacao" é obrigatório.',
-            'ligacao.integer'     => 'O campo "ligacao" deve ser um número inteiro.',
-            'ligacao.min'         => 'O campo "ligacao" deve ser maior que zero.',
+            'ligacao.regex'       => 'O campo "ligacao" deve ser um número inteiro positivo.',
             'referencia.required' => 'O campo "referencia" é obrigatório.',
             'referencia.regex'    => 'O campo "referencia" deve ter exatamente 4 dígitos (ex: 0326).',
             'vencimento.required' => 'O campo "vencimento" é obrigatório.',
