@@ -3,8 +3,6 @@
 namespace App\Services;
 
 use App\Repositories\DocumentoRepository;
-use Endroid\QrCode\QrCode;
-use Endroid\QrCode\Writer\PngWriter;
 
 class DocumentoService
 {
@@ -24,14 +22,12 @@ class DocumentoService
 
         $documentos = array_map(function ($row) {
             $r = (array) $row;
-            $qrCode = $r['qrCode'] ?? null;
 
             return [
-                'referencia'    => $r['referencia'] ?? null,
-                'vencimento'    => $r['vencimento'] ?? null,
-                'valor'         => isset($r['valor']) && $r['valor'] !== null ? (float) $r['valor'] : null,
-                'qrCode'        => $qrCode,
-                'qrCodeImagem'  => $this->gerarQrCodeBase64($qrCode),
+                'referencia' => $r['referencia'] ?? null,
+                'vencimento' => $r['vencimento'] ?? null,
+                'valor'      => isset($r['valor']) && $r['valor'] !== null ? (float) $r['valor'] : null,
+                'qrCode'     => $r['qrCode'] ?? null,
             ];
         }, $rows);
 
@@ -40,18 +36,5 @@ class DocumentoService
             'documentos' => $documentos,
             'total'      => count($documentos),
         ];
-    }
-
-    private function gerarQrCodeBase64(?string $conteudo): ?string
-    {
-        if (empty($conteudo)) {
-            return null;
-        }
-
-        $writer = new PngWriter();
-        $qrCode = new QrCode($conteudo);
-        $result = $writer->write($qrCode);
-
-        return 'data:image/png;base64,' . base64_encode($result->getString());
     }
 }

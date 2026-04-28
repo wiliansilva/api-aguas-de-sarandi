@@ -54,41 +54,6 @@ class DocumentoServiceTest extends TestCase
         $this->assertCount(2, $resultado['documentos']);
     }
 
-    public function test_qr_code_imagem_e_gerada_quando_qrcode_preenchido(): void
-    {
-        $row = (object) [
-            'referencia' => '2024-01',
-            'vencimento' => '2024-01-10',
-            'valor'      => '150.50',
-            'qrCode'     => '00020126580014br.gov.bcb.pix0136123e4567-e89b-12d3-a456-426614174000',
-        ];
-
-        $this->repository->method('findDocumentosEmAberto')->willReturn([$row]);
-
-        $resultado = $this->service->consultarDocumentosEmAberto('1001');
-        $doc       = $resultado['documentos'][0];
-
-        $this->assertArrayHasKey('qrCodeImagem', $doc);
-        $this->assertNotNull($doc['qrCodeImagem']);
-        $this->assertStringStartsWith('data:image/png;base64,', $doc['qrCodeImagem']);
-    }
-
-    public function test_qr_code_imagem_e_null_quando_qrcode_vazio(): void
-    {
-        $row = (object) [
-            'referencia' => '2024-01',
-            'vencimento' => '2024-01-10',
-            'valor'      => '150.50',
-            'qrCode'     => null,
-        ];
-
-        $this->repository->method('findDocumentosEmAberto')->willReturn([$row]);
-
-        $resultado = $this->service->consultarDocumentosEmAberto('1001');
-
-        $this->assertNull($resultado['documentos'][0]['qrCodeImagem']);
-    }
-
     public function test_valor_e_convertido_para_float(): void
     {
         $row = (object) [
@@ -150,7 +115,6 @@ class DocumentoServiceTest extends TestCase
         $this->assertSame('2024-03-15', $doc['vencimento']);
         $this->assertSame(99.99, $doc['valor']);
         $this->assertSame('QR_CODE_DATA', $doc['qrCode']);
-        $this->assertStringStartsWith('data:image/png;base64,', $doc['qrCodeImagem']);
     }
 
     public function test_campos_ausentes_retornam_null(): void
@@ -165,7 +129,6 @@ class DocumentoServiceTest extends TestCase
         $this->assertNull($doc['vencimento']);
         $this->assertNull($doc['valor']);
         $this->assertNull($doc['qrCode']);
-        $this->assertNull($doc['qrCodeImagem']);
     }
 
     public function test_passa_ligacao_correta_ao_repositorio(): void

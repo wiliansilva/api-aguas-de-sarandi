@@ -32,11 +32,10 @@ class DocumentoControllerTest extends TestCase
                     'ligacao'    => '1001',
                     'documentos' => [
                         [
-                            'referencia'   => '2024-01',
-                            'vencimento'   => '2024-01-10',
-                            'valor'        => 150.50,
-                            'qrCode'       => null,
-                            'qrCodeImagem' => null,
+                            'referencia' => '2024-01',
+                            'vencimento' => '2024-01-10',
+                            'valor'      => 150.50,
+                            'qrCode'     => null,
                         ],
                     ],
                     'total' => 1,
@@ -53,7 +52,7 @@ class DocumentoControllerTest extends TestCase
             ->assertJsonStructure([
                 'success',
                 'ligacao',
-                'documentos' => [['referencia', 'vencimento', 'valor', 'qrCode', 'qrCodeImagem']],
+                'documentos' => [['referencia', 'vencimento', 'valor', 'qrCode']],
                 'total',
             ]);
     }
@@ -92,9 +91,9 @@ class DocumentoControllerTest extends TestCase
                 ->andReturn([
                     'ligacao'    => '1001',
                     'documentos' => [
-                        ['referencia' => '2024-01', 'vencimento' => '2024-01-10', 'valor' => 100.0, 'qrCode' => null, 'qrCodeImagem' => null],
-                        ['referencia' => '2024-02', 'vencimento' => '2024-02-10', 'valor' => 200.0, 'qrCode' => null, 'qrCodeImagem' => null],
-                        ['referencia' => '2024-03', 'vencimento' => '2024-03-10', 'valor' => 300.0, 'qrCode' => null, 'qrCodeImagem' => null],
+                        ['referencia' => '2024-01', 'vencimento' => '2024-01-10', 'valor' => 100.0, 'qrCode' => null],
+                        ['referencia' => '2024-02', 'vencimento' => '2024-02-10', 'valor' => 200.0, 'qrCode' => null],
+                        ['referencia' => '2024-03', 'vencimento' => '2024-03-10', 'valor' => 300.0, 'qrCode' => null],
                     ],
                     'total' => 3,
                 ]);
@@ -127,69 +126,6 @@ class DocumentoControllerTest extends TestCase
         );
 
         $response->assertJsonStructure(['success', 'ligacao', 'documentos', 'total']);
-    }
-
-    public function test_qr_code_imagem_presente_na_resposta_quando_qrcode_preenchido(): void
-    {
-        $base64 = 'data:image/png;base64,' . base64_encode('fake-png-content');
-
-        $this->mock(DocumentoService::class, function ($mock) use ($base64) {
-            $mock->shouldReceive('consultarDocumentosEmAberto')
-                ->andReturn([
-                    'ligacao'    => '1001',
-                    'documentos' => [
-                        [
-                            'referencia'   => '2024-01',
-                            'vencimento'   => '2024-01-10',
-                            'valor'        => 150.50,
-                            'qrCode'       => '00020126580014br.gov.bcb.pix',
-                            'qrCodeImagem' => $base64,
-                        ],
-                    ],
-                    'total' => 1,
-                ]);
-        });
-
-        $response = $this->getJson(
-            '/api/v1/documentos/1001',
-            ['Authorization' => $this->validAuth]
-        );
-
-        $response->assertStatus(200)
-            ->assertJsonStructure([
-                'documentos' => [['referencia', 'vencimento', 'valor', 'qrCode', 'qrCodeImagem']],
-            ]);
-
-        $imagem = $response->json('documentos.0.qrCodeImagem');
-        $this->assertStringStartsWith('data:image/png;base64,', $imagem);
-    }
-
-    public function test_qr_code_imagem_null_quando_qrcode_ausente(): void
-    {
-        $this->mock(DocumentoService::class, function ($mock) {
-            $mock->shouldReceive('consultarDocumentosEmAberto')
-                ->andReturn([
-                    'ligacao'    => '1001',
-                    'documentos' => [
-                        [
-                            'referencia'   => '2024-01',
-                            'vencimento'   => '2024-01-10',
-                            'valor'        => 150.50,
-                            'qrCode'       => null,
-                            'qrCodeImagem' => null,
-                        ],
-                    ],
-                    'total' => 1,
-                ]);
-        });
-
-        $response = $this->getJson(
-            '/api/v1/documentos/1001',
-            ['Authorization' => $this->validAuth]
-        );
-
-        $response->assertStatus(200)
-            ->assertJsonPath('documentos.0.qrCodeImagem', null);
     }
 
     // -------------------------------------------------------------------------

@@ -4,6 +4,8 @@ namespace App\Services;
 
 use App\Helpers\Modulo10;
 use App\Repositories\LinhaDigitavelRepository;
+use Endroid\QrCode\QrCode;
+use Endroid\QrCode\Writer\PngWriter;
 use Illuminate\Http\Exceptions\HttpResponseException;
 
 class LinhaDigitavelService
@@ -29,9 +31,9 @@ class LinhaDigitavelService
      * @param  string  $referencia  Formato: MMAA (ex: 0326)
      * @param  string  $vencimento  Formato: YYYY-MM-DD
      * @param  float   $valor
-     * @return string  Linha digitável formatada (ex: 8260000000-5 27063500001-3 ...)
+     * @return array{linhaDigitavel: string, qrCodeImagem: ?string}
      */
-    public function gerar(string $ligacao, string $referencia, string $vencimento, float $valor): string
+    public function gerar(string $ligacao, string $referencia, string $vencimento, float $valor): array
     {
         $documento = $this->repository->findDocumento($ligacao, $referencia, $vencimento, $valor);
 
@@ -77,7 +79,10 @@ class LinhaDigitavelService
         $dv3 = Modulo10::calcular($campo3);
         $dv4 = Modulo10::calcular($campo4);
 
-        return "{$campo1}-{$dv1} {$campo2}-{$dv2} {$campo3}-{$dv3} {$campo4}-{$dv4}";
+        return [
+            'linhaDigitavel' => "{$campo1}-{$dv1} {$campo2}-{$dv2} {$campo3}-{$dv3} {$campo4}-{$dv4}",
+            'qrCodeImagem'   => $this->gerarQrCodeBase64($documento->qrCode ?? null),
+        ];
     }
 
     /**
@@ -85,15 +90,28 @@ class LinhaDigitavelService
      */
     public function gerarSemFormatacao(string $ligacao, string $referencia, string $vencimento, float $valor): string
     {
-        $linhaFormatada = $this->gerar($ligacao, $referencia, $vencimento, $valor);
+        $dados = $this->gerar($ligacao, $referencia, $vencimento, $valor);
 
         // Remove espaços e hífens
-        return str_replace([' ', '-'], '', $linhaFormatada);
+        return str_replace([' ', '-'], '', $dados['linhaDigitavel']);
     }
 
     // ─────────────────────────────────────────────────────────────
-    // Helpers privados de transformação
+    // Helpers privados
     // ─────────────────────────────────────────────────────────────
+
+    private function gerarQrCodeBase64(?string $conteudo): ?string
+    {
+        if (empty($conteudo)) {
+            return null;
+        }
+
+        $writer = new PngWriter();
+        $qrCode = new QrCode($conteudo);
+        $result = $writer->write($qrCode);
+
+        return 'data:image/png;base64,' . base64_encode($result->getString());
+    }
 
     /**
      * Formata o valor com 11 posições (FEBRABAN Produto 8, pos 5-15).

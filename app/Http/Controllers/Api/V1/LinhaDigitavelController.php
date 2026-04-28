@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Requests\LinhaDigitavelRequest;
+use App\Http\Resources\LinhaDigitavelResource;
 use App\Services\LinhaDigitavelService;
 use App\Traits\ApiResponse;
 use Illuminate\Http\JsonResponse;
@@ -19,7 +20,7 @@ class LinhaDigitavelController
     {
         $dados = $request->validated();
 
-        $linhaDigitavel = $this->linhaDigitavelService->gerar(
+        $resultado = $this->linhaDigitavelService->gerar(
             ligacao:    $dados['ligacao'],
             referencia: (string) $dados['referencia'],
             vencimento: (string) $dados['vencimento'],
@@ -27,8 +28,8 @@ class LinhaDigitavelController
         );
 
         return response()->json([
-            'success'        => true,
-            'linhaDigitavel' => $linhaDigitavel,
+            'success' => true,
+            ...(new LinhaDigitavelResource($resultado))->resolve($request),
         ]);
     }
 }

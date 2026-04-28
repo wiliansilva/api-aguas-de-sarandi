@@ -26,7 +26,8 @@ class LinhaDigitavelRepository
                     D.C03NLG AS ligacao,
                     D.C03MES AS referencia,
                     D.C03VEC AS vencimento,
-                    D.C03DEV AS valor
+                    D.C03DEV AS valor,
+                    D.QRCODE AS qrCode
                 FROM CADDEV D
                 WHERE D.C03NLG = ?
                   AND D.C03MES = ?
