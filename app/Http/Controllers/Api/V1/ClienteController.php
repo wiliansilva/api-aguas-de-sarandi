@@ -18,9 +18,9 @@ class ClienteController
 
     public function consulta(ConsultaClienteRequest $request): JsonResponse
     {
-        $clientes = $this->clienteService->consultarPorDocumento(
-            $request->validated('documento')
-        );
+        $clientes = $request->filled('ligacao')
+            ? $this->clienteService->consultarPorLigacao($request->validated('ligacao'))
+            : $this->clienteService->consultarPorDocumento($request->validated('documento'));
 
         $data = array_map(
             fn($cliente) => (new ClienteResource($cliente))->resolve($request),

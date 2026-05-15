@@ -151,4 +151,66 @@ class ClienteServiceTest extends TestCase
         $this->assertIsArray($resultado[0]);
         $this->assertSame(999, $resultado[0]['Ligacao']);
     }
+
+    // -------------------------------------------------------------------------
+    // consultarPorLigacao
+    // -------------------------------------------------------------------------
+
+    public function test_consultar_por_ligacao_retorna_array_vazio(): void
+    {
+        $this->repository
+            ->expects($this->once())
+            ->method('findByLigacao')
+            ->with('161615')
+            ->willReturn([]);
+
+        $resultado = $this->service->consultarPorLigacao('161615');
+
+        $this->assertSame([], $resultado);
+    }
+
+    public function test_consultar_por_ligacao_retorna_clientes_formatados(): void
+    {
+        $row = (object) [
+            'Ligacao'         => '161615',
+            'DV'              => '1',
+            'Nome'            => 'Maria Souza',
+            'CPF_CNPJ'        => '98765432100',
+            'CPF_CNPJ_2'      => null,
+            'nomeDaRua'       => 'Av. Central',
+            'nomeDoBairro'    => 'Vila Nova',
+            'Numero'          => '200',
+            'Complemento'     => null,
+            'nomeDoMunicipio' => 'Sarandi',
+        ];
+
+        $this->repository->method('findByLigacao')->willReturn([$row]);
+
+        $resultado = $this->service->consultarPorLigacao('161615');
+
+        $this->assertCount(1, $resultado);
+        $this->assertSame([
+            'Ligacao'         => '161615',
+            'DV'              => '1',
+            'Nome'            => 'Maria Souza',
+            'CPF_CNPJ'        => '98765432100',
+            'CPF_CNPJ_2'      => null,
+            'Rua'             => 'Av. Central',
+            'Bairro'          => 'Vila Nova',
+            'Numero'          => '200',
+            'Complemento'     => null,
+            'nomeDoMunicipio' => 'Sarandi',
+        ], $resultado[0]);
+    }
+
+    public function test_consultar_por_ligacao_passa_ligacao_correta_ao_repositorio(): void
+    {
+        $this->repository
+            ->expects($this->once())
+            ->method('findByLigacao')
+            ->with('0161615')
+            ->willReturn([]);
+
+        $this->service->consultarPorLigacao('0161615');
+    }
 }

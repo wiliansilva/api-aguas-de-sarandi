@@ -13,9 +13,6 @@ class ConsultaClienteRequest extends FormRequest
         return true;
     }
 
-    /**
-     * Normaliza o documento antes de validar (remove formatação).
-     */
     protected function prepareForValidation(): void
     {
         if ($this->has('documento')) {
@@ -28,25 +25,31 @@ class ConsultaClienteRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'documento' => [
-                'required',
-                'string',
-                'regex:/^\d{11}$|^\d{14}$/',
-            ],
+            'documento' => ['sometimes', 'string', 'regex:/^\d{11}$|^\d{14}$/'],
+            'ligacao'   => ['sometimes', 'string', 'regex:/^0*[1-9]\d*$/'],
         ];
+    }
+
+    public function withValidator($validator): void
+    {
+        $validator->after(function ($validator) {
+            if (!$this->filled('documento') && !$this->filled('ligacao')) {
+                $validator->errors()->add(
+                    'parametro',
+                    'Informe "documento" (CPF ou CNPJ) ou "ligacao".'
+                );
+            }
+        });
     }
 
     public function messages(): array
     {
         return [
-            'documento.required' => 'O parâmetro "documento" é obrigatório.',
-            'documento.regex'    => 'Informe um CPF (11 dígitos) ou CNPJ (14 dígitos) sem formatação.',
+            'documento.regex' => 'Informe um CPF (11 dígitos) ou CNPJ (14 dígitos) sem formatação.',
+            'ligacao.regex'   => 'Informe um número de ligação válido (inteiro positivo).',
         ];
     }
 
-    /**
-     * Retorna erro em JSON ao invés de redirecionar (padrão de API).
-     */
     protected function failedValidation(Validator $validator): void
     {
         throw new HttpResponseException(

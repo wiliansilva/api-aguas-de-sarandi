@@ -3,7 +3,6 @@
 namespace Tests\Feature\Api;
 
 use App\Services\ClienteService;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 class ClienteControllerTest extends TestCase
@@ -197,6 +196,110 @@ class ClienteControllerTest extends TestCase
         );
 
         $response->assertStatus(422);
+    }
+
+    public function test_retorna_422_sem_parametro_documento_e_sem_ligacao(): void
+    {
+        $response = $this->getJson(
+            '/api/v1/clientes/consulta',
+            ['Authorization' => $this->validAuth]
+        );
+
+        $response->assertStatus(422)
+            ->assertJson(['success' => false])
+            ->assertJsonStructure(['success', 'error', 'detail']);
+    }
+
+    // -------------------------------------------------------------------------
+    // Ligação
+    // -------------------------------------------------------------------------
+
+    public function test_retorna_200_com_ligacao_valida(): void
+    {
+        $this->mock(ClienteService::class, function ($mock) {
+            $mock->shouldReceive('consultarPorLigacao')
+                ->once()
+                ->with('161615')
+                ->andReturn([
+                    [
+                        'Ligacao'         => '161615',
+                        'DV'              => '1',
+                        'Nome'            => 'Maria Souza',
+                        'CPF_CNPJ'        => '98765432100',
+                        'CPF_CNPJ_2'      => null,
+                        'Rua'             => 'Av. Central',
+                        'Bairro'          => 'Vila Nova',
+                        'Numero'          => '200',
+                        'Complemento'     => null,
+                        'nomeDoMunicipio' => 'Sarandi',
+                    ],
+                ]);
+        });
+
+        $response = $this->getJson(
+            '/api/v1/clientes/consulta?ligacao=161615',
+            ['Authorization' => $this->validAuth]
+        );
+
+        $response->assertStatus(200)
+            ->assertJson(['success' => true])
+            ->assertJsonStructure([
+                'success',
+                'data'  => [['ligacao', 'dv', 'nome', 'cpf_cnpj', 'cpf_cnpj_2', 'rua', 'bairro', 'numero', 'complemento', 'municipio']],
+                'total',
+            ]);
+    }
+
+    public function test_retorna_lista_vazia_quando_ligacao_nao_encontrada(): void
+    {
+        $this->mock(ClienteService::class, function ($mock) {
+            $mock->shouldReceive('consultarPorLigacao')->andReturn([]);
+        });
+
+        $response = $this->getJson(
+            '/api/v1/clientes/consulta?ligacao=999999',
+            ['Authorization' => $this->validAuth]
+        );
+
+        $response->assertStatus(200)
+            ->assertJson(['success' => true, 'data' => [], 'total' => 0]);
+    }
+
+    public function test_retorna_422_com_ligacao_invalida_texto(): void
+    {
+        $response = $this->getJson(
+            '/api/v1/clientes/consulta?ligacao=abc',
+            ['Authorization' => $this->validAuth]
+        );
+
+        $response->assertStatus(422)->assertJson(['success' => false]);
+    }
+
+    public function test_retorna_422_com_ligacao_zero(): void
+    {
+        $response = $this->getJson(
+            '/api/v1/clientes/consulta?ligacao=0',
+            ['Authorization' => $this->validAuth]
+        );
+
+        $response->assertStatus(422)->assertJson(['success' => false]);
+    }
+
+    public function test_aceita_ligacao_com_zeros_a_esquerda(): void
+    {
+        $this->mock(ClienteService::class, function ($mock) {
+            $mock->shouldReceive('consultarPorLigacao')
+                ->once()
+                ->with('0161615')
+                ->andReturn([]);
+        });
+
+        $response = $this->getJson(
+            '/api/v1/clientes/consulta?ligacao=0161615',
+            ['Authorization' => $this->validAuth]
+        );
+
+        $response->assertStatus(200);
     }
 
     // -------------------------------------------------------------------------
